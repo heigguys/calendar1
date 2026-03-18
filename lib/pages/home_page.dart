@@ -66,10 +66,10 @@ class HomePage extends ConsumerWidget {
             focusedDay: focusedDay,
             calendarFormat: calendarFormat,
             selectedDayPredicate: (day) => isSameDay(day, selectedDay),
-            eventLoader: (day) => monthMap[normalizeDate(day)] ?? const [],
+            eventLoader: (day) => monthMap[stripTime(day)] ?? const [],
             availableGestures: AvailableGestures.horizontalSwipe,
             onDaySelected: (selected, focused) {
-              ref.read(selectedDayProvider.notifier).state = normalizeDate(selected);
+              ref.read(selectedDayProvider.notifier).state = stripTime(selected);
               ref.read(focusedDayProvider.notifier).state = focused;
             },
             onPageChanged: (focused) {

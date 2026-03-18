@@ -7,7 +7,7 @@ import '../models/schedule_item.dart';
 import '../services/notification_service.dart';
 import '../services/schedule_service.dart';
 
-DateTime normalizeDate(DateTime date) => DateTime(date.year, date.month, date.day);
+DateTime stripTime(DateTime date) => DateTime(date.year, date.month, date.day);
 
 final notificationServiceProvider = Provider<NotificationService>(
   (ref) => throw UnimplementedError('NotificationService must be overridden in main.dart'),
@@ -30,7 +30,7 @@ final scheduleServiceProvider = FutureProvider<ScheduleService>((ref) async {
 });
 
 final selectedDayProvider = StateProvider<DateTime>(
-  (ref) => normalizeDate(DateTime.now()),
+  (ref) => stripTime(DateTime.now()),
 );
 
 final focusedDayProvider = StateProvider<DateTime>(
@@ -45,7 +45,7 @@ final daySchedulesProvider =
     StreamProvider.family.autoDispose<List<ScheduleItem>, DateTime>(
   (ref, day) async* {
     final service = await ref.watch(scheduleServiceProvider.future);
-    yield* service.watchSchedulesForDay(normalizeDate(day));
+    yield* service.watchSchedulesForDay(stripTime(day));
   },
 );
 
@@ -68,8 +68,8 @@ final monthEventMapProvider =
     final monthEnd = DateTime(month.year, month.month + 1, 0);
 
     for (final schedule in monthSchedules) {
-      var cursor = normalizeDate(schedule.startTime);
-      var end = normalizeDate(schedule.endTime);
+      var cursor = stripTime(schedule.startTime);
+      var end = stripTime(schedule.endTime);
 
       if (cursor.isBefore(monthStart)) {
         cursor = monthStart;
@@ -87,3 +87,4 @@ final monthEventMapProvider =
     return map;
   },
 );
+
