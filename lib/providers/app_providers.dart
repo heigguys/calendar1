@@ -1,0 +1,89 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:isar/isar.dart';
+import 'package:table_calendar/table_calendar.dart';
+
+import '../database/isar_database.dart';
+import '../models/schedule_item.dart';
+import '../services/notification_service.dart';
+import '../services/schedule_service.dart';
+
+DateTime normalizeDate(DateTime date) => DateTime(date.year, date.month, date.day);
+
+final notificationServiceProvider = Provider<NotificationService>(
+  (ref) => throw UnimplementedError('NotificationService must be overridden in main.dart'),
+);
+
+final isarProvider = FutureProvider<Isar>((ref) async {
+  final isar = await IsarDatabase.open();
+  ref.onDispose(() {
+    if (isar.isOpen) {
+      isar.close();
+    }
+  });
+  return isar;
+});
+
+final scheduleServiceProvider = FutureProvider<ScheduleService>((ref) async {
+  final isar = await ref.watch(isarProvider.future);
+  final notificationService = ref.watch(notificationServiceProvider);
+  return ScheduleService(isar, notificationService);
+});
+
+final selectedDayProvider = StateProvider<DateTime>(
+  (ref) => normalizeDate(DateTime.now()),
+);
+
+final focusedDayProvider = StateProvider<DateTime>(
+  (ref) => DateTime.now(),
+);
+
+final calendarFormatProvider = StateProvider<CalendarFormat>(
+  (ref) => CalendarFormat.month,
+);
+
+final daySchedulesProvider =
+    StreamProvider.family.autoDispose<List<ScheduleItem>, DateTime>(
+  (ref, day) async* {
+    final service = await ref.watch(scheduleServiceProvider.future);
+    yield* service.watchSchedulesForDay(normalizeDate(day));
+  },
+);
+
+final monthSchedulesProvider =
+    StreamProvider.family.autoDispose<List<ScheduleItem>, DateTime>(
+  (ref, month) async* {
+    final service = await ref.watch(scheduleServiceProvider.future);
+    final start = DateTime(month.year, month.month, 1);
+    final end = DateTime(month.year, month.month + 1, 1);
+    yield* service.watchSchedulesInRange(start, end);
+  },
+);
+
+final monthEventMapProvider =
+    Provider.family.autoDispose<Map<DateTime, List<ScheduleItem>>, DateTime>(
+  (ref, month) {
+    final monthSchedules = ref.watch(monthSchedulesProvider(month)).valueOrNull ?? [];
+    final map = <DateTime, List<ScheduleItem>>{};
+    final monthStart = DateTime(month.year, month.month, 1);
+    final monthEnd = DateTime(month.year, month.month + 1, 0);
+
+    for (final schedule in monthSchedules) {
+      var cursor = normalizeDate(schedule.startTime);
+      var end = normalizeDate(schedule.endTime);
+
+      if (cursor.isBefore(monthStart)) {
+        cursor = monthStart;
+      }
+      if (end.isAfter(monthEnd)) {
+        end = monthEnd;
+      }
+
+      while (!cursor.isAfter(end)) {
+        map.putIfAbsent(cursor, () => []);
+        map[cursor]!.add(schedule);
+        cursor = cursor.add(const Duration(days: 1));
+      }
+    }
+    return map;
+  },
+);
