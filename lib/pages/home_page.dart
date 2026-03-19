@@ -341,6 +341,7 @@ class HomePage extends ConsumerWidget {
     final holidayName = _holidayLabelForDay(day, lunar);
     final lunarText = holidayName ?? '${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}';
     final isHoliday = _isHolidayDay(day, lunar);
+    final isWeekend = day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
 
     Color? bgColor;
     Color textColor = theme.textTheme.bodyMedium?.color ?? Colors.black;
@@ -377,6 +378,13 @@ class HomePage extends ConsumerWidget {
         textColor = theme.disabledColor;
         lunarColor = theme.disabledColor.withValues(alpha: 0.85);
       }
+    }
+
+    if (isWeekend && !isSelected) {
+      const weekendGreen = Color(0xFF2FB54A);
+      textColor = isOutside
+          ? weekendGreen.withValues(alpha: 0.65)
+          : weekendGreen;
     }
 
     return Container(
