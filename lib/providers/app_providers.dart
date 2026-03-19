@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -6,6 +7,7 @@ import '../database/isar_database.dart';
 import '../models/schedule_item.dart';
 import '../services/notification_service.dart';
 import '../services/schedule_service.dart';
+import '../services/web_schedule_service.dart';
 
 DateTime stripTime(DateTime date) => DateTime(date.year, date.month, date.day);
 
@@ -23,10 +25,19 @@ final isarProvider = FutureProvider<Isar>((ref) async {
   return isar;
 });
 
-final scheduleServiceProvider = FutureProvider<ScheduleService>((ref) async {
-  final isar = await ref.watch(isarProvider.future);
+final scheduleServiceProvider = FutureProvider<ScheduleServiceBase>((ref) async {
   final notificationService = ref.watch(notificationServiceProvider);
-  return ScheduleService(isar, notificationService);
+
+  if (kIsWeb) {
+    final service = WebScheduleService(notificationService);
+    ref.onDispose(service.dispose);
+    return service;
+  }
+
+  final isar = await ref.watch(isarProvider.future);
+  final service = ScheduleService(isar, notificationService);
+  ref.onDispose(service.dispose);
+  return service;
 });
 
 final selectedDayProvider = StateProvider<DateTime>(
@@ -87,4 +98,3 @@ final monthEventMapProvider =
     return map;
   },
 );
-

@@ -15,6 +15,10 @@ class NotificationService {
   static const String _channelDescription = '本地日程提醒通知';
 
   Future<void> initialize() async {
+    if (kIsWeb) {
+      return;
+    }
+
     const initSettings = InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       iOS: DarwinInitializationSettings(),
@@ -43,6 +47,10 @@ class NotificationService {
   }
 
   Future<void> scheduleOrUpdateReminder(ScheduleItem item) async {
+    if (kIsWeb) {
+      return;
+    }
+
     await cancelReminder(item.id);
 
     if (item.reminderTime == null) {
@@ -78,6 +86,9 @@ class NotificationService {
   }
 
   Future<void> cancelReminder(int scheduleId) async {
+    if (kIsWeb) {
+      return;
+    }
     await _plugin.cancel(_notificationId(scheduleId));
   }
 
