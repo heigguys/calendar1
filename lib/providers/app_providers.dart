@@ -1,6 +1,10 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../database/isar_database.dart';
@@ -14,6 +18,44 @@ DateTime stripTime(DateTime date) => DateTime(date.year, date.month, date.day);
 final notificationServiceProvider = Provider<NotificationService>(
   (ref) => throw UnimplementedError('NotificationService must be overridden in main.dart'),
 );
+
+class BackgroundImageController extends AsyncNotifier<String?> {
+  static const String _key = 'calendar_bg_image_base64';
+
+  @override
+  Future<String?> build() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_key);
+  }
+
+  Future<void> saveBase64(String? base64Image) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (base64Image == null || base64Image.isEmpty) {
+      await prefs.remove(_key);
+      state = const AsyncData(null);
+      return;
+    }
+    await prefs.setString(_key, base64Image);
+    state = AsyncData(base64Image);
+  }
+}
+
+final backgroundImageProvider =
+    AsyncNotifierProvider<BackgroundImageController, String?>(
+  BackgroundImageController.new,
+);
+
+final backgroundImageBytesProvider = Provider<Uint8List?>((ref) {
+  final raw = ref.watch(backgroundImageProvider).valueOrNull;
+  if (raw == null || raw.isEmpty) {
+    return null;
+  }
+  try {
+    return base64Decode(raw);
+  } catch (_) {
+    return null;
+  }
+});
 
 final isarProvider = FutureProvider<Isar>((ref) async {
   final isar = await IsarDatabase.open();

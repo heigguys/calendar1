@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -133,18 +133,8 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
                 setState(() {
                   _isAllDay = value;
                   if (value) {
-                    _startTime = DateTime(
-                      _startTime.year,
-                      _startTime.month,
-                      _startTime.day,
-                    );
-                    _endTime = DateTime(
-                      _endTime.year,
-                      _endTime.month,
-                      _endTime.day,
-                      23,
-                      59,
-                    );
+                    _startTime = DateTime(_startTime.year, _startTime.month, _startTime.day);
+                    _endTime = DateTime(_endTime.year, _endTime.month, _endTime.day, 23, 59);
                   }
                 });
               },
@@ -154,9 +144,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
               contentPadding: EdgeInsets.zero,
               title: const Text('开始时间'),
               subtitle: Text(
-                _isAllDay
-                    ? dateLabel.format(_startTime)
-                    : dateTimeLabel.format(_startTime),
+                _isAllDay ? dateLabel.format(_startTime) : dateTimeLabel.format(_startTime),
               ),
               trailing: const Icon(Icons.edit_calendar_outlined),
               onTap: () => _pickStartTime(context),
@@ -175,9 +163,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
               contentPadding: EdgeInsets.zero,
               title: const Text('提醒时间'),
               subtitle: Text(
-                _reminderTime == null
-                    ? '不提醒'
-                    : dateTimeLabel.format(_reminderTime!),
+                _reminderTime == null ? '不提醒' : dateTimeLabel.format(_reminderTime!),
               ),
               trailing: Wrap(
                 spacing: 8,
@@ -306,9 +292,8 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
       item.note = _noteController.text.trim();
       item.category = _categoryController.text.trim();
       item.isAllDay = _isAllDay;
-      item.startTime = _isAllDay
-          ? DateTime(_startTime.year, _startTime.month, _startTime.day)
-          : _startTime;
+      item.startTime =
+          _isAllDay ? DateTime(_startTime.year, _startTime.month, _startTime.day) : _startTime;
       item.endTime = _isAllDay
           ? DateTime(_endTime.year, _endTime.month, _endTime.day, 23, 59)
           : _endTime;

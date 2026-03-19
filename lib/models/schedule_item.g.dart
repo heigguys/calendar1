@@ -15,7 +15,7 @@ extension GetScheduleItemCollection on Isar {
 
 const ScheduleItemSchema = CollectionSchema(
   name: r'ScheduleItem',
-  id: 1124194671555598,
+  id: 1124194671555598070,
   properties: {
     r'category': PropertySchema(
       id: 0,
@@ -70,7 +70,7 @@ const ScheduleItemSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'title': IndexSchema(
-      id: -7636685945352118,
+      id: -7636685945352118059,
       name: r'title',
       unique: false,
       replace: false,
@@ -83,7 +83,7 @@ const ScheduleItemSchema = CollectionSchema(
       ],
     ),
     r'startTime': IndexSchema(
-      id: -3870335341264752,
+      id: -3870335341264752872,
       name: r'startTime',
       unique: false,
       replace: false,
@@ -96,7 +96,7 @@ const ScheduleItemSchema = CollectionSchema(
       ],
     ),
     r'endTime': IndexSchema(
-      id: 6854976694250177,
+      id: 6854976694250177488,
       name: r'endTime',
       unique: false,
       replace: false,

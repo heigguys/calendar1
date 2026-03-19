@@ -10,6 +10,7 @@ class IsarDatabase {
     final dir = await getApplicationDocumentsDirectory();
     return Isar.open(
       [ScheduleItemSchema],
+      name: 'calendar_local_v2',
       directory: dir.path,
     );
   }

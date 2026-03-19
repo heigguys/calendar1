@@ -1,5 +1,5 @@
-name: calendar
-description: 本地离线日历 App（Flutter + Riverpod + Isar + 本地通知）
+﻿name: calendar
+description: Local offline calendar app
 publish_to: "none"
 
 version: 1.0.0+1
@@ -22,6 +22,9 @@ dependencies:
   flutter_local_notifications: ^19.4.0
   timezone: ^0.10.1
   flutter_timezone: ^4.1.1
+  lunar: ^1.7.8
+  image_picker: ^1.1.2
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:
