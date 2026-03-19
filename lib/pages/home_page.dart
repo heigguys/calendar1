@@ -337,7 +337,7 @@ class HomePage extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
     final isDarkMode = theme.brightness == Brightness.dark;
     final lunar = Lunar.fromDate(day);
-    final lunarText = '${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}';
+    final lunarText = _buildLunarOrHolidayText(day, lunar);
 
     Color? bgColor;
     Color textColor = theme.textTheme.bodyMedium?.color ?? Colors.black;
@@ -413,6 +413,73 @@ class HomePage extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  String _buildLunarOrHolidayText(DateTime day, Lunar lunar) {
+    final holidayName = _holidayNameForDay(day, lunar);
+    if (holidayName != null) {
+      return holidayName;
+    }
+    return '${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}';
+  }
+
+  String? _holidayNameForDay(DateTime day, Lunar lunar) {
+    if (day.month == 1 && day.day == 1) {
+      return '元旦';
+    }
+    if (_isGregorianRange(day, 4, 4, 4, 6)) {
+      return '清明节';
+    }
+    if (_isGregorianRange(day, 5, 1, 5, 5)) {
+      return '劳动节';
+    }
+    if (_isGregorianRange(day, 6, 20, 6, 22)) {
+      return '端午节';
+    }
+    if (_isGregorianRange(day, 9, 27, 9, 29)) {
+      return '中秋节';
+    }
+    if (_isGregorianRange(day, 10, 1, 10, 7)) {
+      return '国庆节';
+    }
+
+    final lunarMonth = lunar.getMonthInChinese();
+    final lunarDay = lunar.getDayInChinese();
+
+    if (lunarMonth == '正') {
+      const springFestivalDays = <String>{
+        '初一',
+        '初二',
+        '初三',
+        '初四',
+        '初五',
+        '初六',
+        '初七',
+      };
+      if (springFestivalDays.contains(lunarDay)) {
+        return '春节';
+      }
+    }
+    if (lunarMonth == '五' && lunarDay == '初五') {
+      return '端午节';
+    }
+    if (lunarMonth == '八' && lunarDay == '十五') {
+      return '中秋节';
+    }
+    return null;
+  }
+
+  bool _isGregorianRange(
+    DateTime day,
+    int startMonth,
+    int startDay,
+    int endMonth,
+    int endDay,
+  ) {
+    final normalized = DateTime(day.year, day.month, day.day);
+    final start = DateTime(day.year, startMonth, startDay);
+    final end = DateTime(day.year, endMonth, endDay);
+    return !normalized.isBefore(start) && !normalized.isAfter(end);
   }
 
   Future<void> _openBackgroundActions(BuildContext context, WidgetRef ref) async {
