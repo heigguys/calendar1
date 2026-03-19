@@ -122,7 +122,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _categoryMode,
+              initialValue: _categoryMode,
               decoration: const InputDecoration(
                 labelText: '分类',
                 border: OutlineInputBorder(),

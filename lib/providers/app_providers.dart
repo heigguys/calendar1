@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,6 +43,36 @@ class BackgroundImageController extends AsyncNotifier<String?> {
 final backgroundImageProvider =
     AsyncNotifierProvider<BackgroundImageController, String?>(
   BackgroundImageController.new,
+);
+
+class ThemeModeController extends AsyncNotifier<ThemeMode> {
+  static const String _key = 'calendar_theme_mode';
+  static const String _light = 'light';
+  static const String _dark = 'dark';
+
+  @override
+  Future<ThemeMode> build() async {
+    final prefs = await SharedPreferences.getInstance();
+    final value = prefs.getString(_key);
+    return value == _dark ? ThemeMode.dark : ThemeMode.light;
+  }
+
+  Future<void> toggle() async {
+    final current = state.valueOrNull ?? ThemeMode.light;
+    final next = current == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+    await _save(next);
+    state = AsyncData(next);
+  }
+
+  Future<void> _save(ThemeMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = mode == ThemeMode.dark ? _dark : _light;
+    await prefs.setString(_key, raw);
+  }
+}
+
+final themeModeProvider = AsyncNotifierProvider<ThemeModeController, ThemeMode>(
+  ThemeModeController.new,
 );
 
 final backgroundImageBytesProvider = Provider<Uint8List?>((ref) {

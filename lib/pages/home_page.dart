@@ -1,5 +1,4 @@
 ﻿import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,11 +30,18 @@ class HomePage extends ConsumerWidget {
 
     final bgBytes = ref.watch(backgroundImageBytesProvider);
     final bgImage = bgBytes == null ? null : MemoryImage(bgBytes);
+    final themeMode = ref.watch(themeModeProvider).valueOrNull ?? ThemeMode.light;
+    final isDarkMode = themeMode == ThemeMode.dark;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('本地日历'),
         actions: [
+          IconButton(
+            icon: Icon(isDarkMode ? Icons.light_mode_outlined : Icons.nightlight_round),
+            tooltip: isDarkMode ? '切换为浅色模式' : '切换为深色模式',
+            onPressed: () => ref.read(themeModeProvider.notifier).toggle(),
+          ),
           IconButton(
             icon: const Icon(Icons.wallpaper_outlined),
             tooltip: '背景设置',
@@ -52,7 +58,7 @@ class HomePage extends ConsumerWidget {
         children: [
           Positioned.fill(
             child: bgImage == null
-                ? const _DefaultBackground()
+                ? const ColoredBox(color: Colors.white)
                 : Image(
                     image: bgImage,
                     fit: BoxFit.cover,
@@ -60,7 +66,9 @@ class HomePage extends ConsumerWidget {
           ),
           Positioned.fill(
             child: Container(
-              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.78),
+              color: bgImage == null
+                  ? Colors.transparent
+                  : Theme.of(context).colorScheme.surface.withValues(alpha: 0.78),
             ),
           ),
           Column(
@@ -363,6 +371,10 @@ class HomePage extends ConsumerWidget {
       ),
     );
 
+    if (!context.mounted) {
+      return;
+    }
+
     if (action == 'pick') {
       await _pickBackgroundImage(context, ref);
       return;
@@ -456,58 +468,4 @@ class HomePage extends ConsumerWidget {
       );
     }
   }
-}
-
-class _DefaultBackground extends StatelessWidget {
-  const _DefaultBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF8FD3E1),
-            Color(0xFFBFE9F0),
-            Color(0xFFEAF8FB),
-          ],
-        ),
-      ),
-      child: CustomPaint(
-        painter: _WavePainter(),
-      ),
-    );
-  }
-}
-
-class _WavePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-
-    final wave1 = Path()
-      ..moveTo(0, size.height * 0.75)
-      ..quadraticBezierTo(size.width * 0.25, size.height * 0.68, size.width * 0.5, size.height * 0.75)
-      ..quadraticBezierTo(size.width * 0.75, size.height * 0.82, size.width, size.height * 0.74)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-    paint.color = const Color(0x3399DCE8);
-    canvas.drawPath(wave1, paint);
-
-    final wave2 = Path()
-      ..moveTo(0, size.height * 0.85)
-      ..quadraticBezierTo(size.width * 0.25, size.height * 0.78, size.width * 0.5, size.height * 0.86)
-      ..quadraticBezierTo(size.width * 0.78, size.height * 0.93, size.width, size.height * 0.83)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-    paint.color = const Color(0x4DB3EAF2);
-    canvas.drawPath(wave2, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

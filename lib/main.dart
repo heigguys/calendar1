@@ -26,11 +26,19 @@ Future<void> main() async {
   );
 }
 
-class CalendarApp extends StatelessWidget {
+class CalendarApp extends ConsumerWidget {
   const CalendarApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider).valueOrNull ?? ThemeMode.light;
+    final lightScheme = ColorScheme.fromSeed(
+      seedColor: Colors.teal,
+      brightness: Brightness.light,
+    ).copyWith(
+      surface: Colors.white,
+    );
+
     return MaterialApp(
       title: '本地日历',
       locale: const Locale('zh', 'CN'),
@@ -40,15 +48,25 @@ class CalendarApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      themeMode: ThemeMode.system,
+      themeMode: themeMode,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        colorScheme: lightScheme,
+        scaffoldBackgroundColor: Colors.white,
+        canvasColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black87,
+          surfaceTintColor: Colors.transparent,
+        ),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.teal,
           brightness: Brightness.dark,
+        ),
+        appBarTheme: const AppBarTheme(
+          surfaceTintColor: Colors.transparent,
         ),
         useMaterial3: true,
       ),
