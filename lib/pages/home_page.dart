@@ -22,8 +22,6 @@ class HomePage extends ConsumerWidget {
     final focusedDay = ref.watch(focusedDayProvider);
     final calendarFormat = ref.watch(calendarFormatProvider);
     final daySchedules = ref.watch(daySchedulesProvider(selectedDay));
-    final today = stripTime(DateTime.now());
-    final todaySchedules = ref.watch(daySchedulesProvider(today));
     final monthMap = ref.watch(
       monthEventMapProvider(DateTime(focusedDay.year, focusedDay.month)),
     );
@@ -77,249 +75,178 @@ class HomePage extends ConsumerWidget {
                       : Theme.of(context).colorScheme.surface.withValues(alpha: 0.78),
             ),
           ),
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  children: [
-                    ChoiceChip(
-                      label: const Text('月视图'),
-                      selected: calendarFormat == CalendarFormat.month,
-                      selectedColor: isDarkMode ? surfaceColor : null,
-                      backgroundColor: isDarkMode ? surfaceColor : null,
-                      side: isDarkMode
-                          ? BorderSide(
-                              color: calendarFormat == CalendarFormat.month
-                                  ? onSurfaceColor
-                                  : onSurfaceColor.withValues(alpha: 0.35),
-                            )
-                          : null,
-                      labelStyle: isDarkMode
-                          ? TextStyle(color: onSurfaceColor)
-                          : null,
-                      onSelected: (_) {
-                        ref.read(calendarFormatProvider.notifier).state =
-                            CalendarFormat.month;
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    ChoiceChip(
-                      label: const Text('周视图'),
-                      selected: calendarFormat == CalendarFormat.week,
-                      selectedColor: isDarkMode ? surfaceColor : null,
-                      backgroundColor: isDarkMode ? surfaceColor : null,
-                      side: isDarkMode
-                          ? BorderSide(
-                              color: calendarFormat == CalendarFormat.week
-                                  ? onSurfaceColor
-                                  : onSurfaceColor.withValues(alpha: 0.35),
-                            )
-                          : null,
-                      labelStyle: isDarkMode
-                          ? TextStyle(color: onSurfaceColor)
-                          : null,
-                      onSelected: (_) {
-                        ref.read(calendarFormatProvider.notifier).state =
-                            CalendarFormat.week;
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 10),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  color: isDarkMode
-                      ? surfaceColor
-                      : Theme.of(context).colorScheme.surface.withValues(alpha: 0.74),
-                ),
-                child: TableCalendar<ScheduleItem>(
-                  locale: 'zh_CN',
-                  startingDayOfWeek: StartingDayOfWeek.monday,
-                  firstDay: DateTime(2020, 1, 1),
-                  lastDay: DateTime(2100, 12, 31),
-                  focusedDay: focusedDay,
-                  calendarFormat: calendarFormat,
-                  selectedDayPredicate: (day) => isSameDay(day, selectedDay),
-                  eventLoader: (day) => monthMap[stripTime(day)] ?? const [],
-                  availableGestures: AvailableGestures.horizontalSwipe,
-                  headerStyle: const HeaderStyle(
-                    formatButtonVisible: false,
-                    titleCentered: true,
-                  ),
-                  calendarStyle: const CalendarStyle(
-                    markersMaxCount: 0,
-                    outsideDaysVisible: true,
-                  ),
-                  calendarBuilders: CalendarBuilders(
-                    defaultBuilder: (context, day, _) => _buildDayCell(
-                      context,
-                      day,
-                      hasEvent: (monthMap[stripTime(day)]?.isNotEmpty ?? false),
-                    ),
-                    outsideBuilder: (context, day, _) => _buildDayCell(
-                      context,
-                      day,
-                      isOutside: true,
-                      hasEvent: (monthMap[stripTime(day)]?.isNotEmpty ?? false),
-                    ),
-                    todayBuilder: (context, day, _) => _buildDayCell(
-                      context,
-                      day,
-                      isToday: true,
-                      hasEvent: (monthMap[stripTime(day)]?.isNotEmpty ?? false),
-                    ),
-                    selectedBuilder: (context, day, _) => _buildDayCell(
-                      context,
-                      day,
-                      isSelected: true,
-                      hasEvent: (monthMap[stripTime(day)]?.isNotEmpty ?? false),
-                    ),
-                  ),
-                  onDaySelected: (selected, focused) {
-                    ref.read(selectedDayProvider.notifier).state = stripTime(selected);
-                    ref.read(focusedDayProvider.notifier).state = focused;
-                  },
-                  onPageChanged: (focused) {
-                    ref.read(focusedDayProvider.notifier).state = focused;
-                  },
-                ),
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    DateFormat('yyyy年MM月dd日 EEEE', 'zh_CN').format(selectedDay),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: daySchedules.when(
-                  data: (items) {
-                    if (items.isEmpty) {
-                      return const EmptyScheduleView();
-                    }
-                    return ListView.builder(
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        final item = items[index];
-                        return ScheduleListItem(
-                          item: item,
-                          backgroundImage: isDarkMode ? null : bgImage,
-                          onTap: () => _openForm(
-                            context,
-                            ref,
-                            schedule: item,
-                            initialDate: selectedDay,
-                          ),
-                          onDelete: () => _deleteSchedule(context, ref, item.id),
-                        );
-                      },
-                    );
-                  },
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (error, stack) => Center(child: Text('加载失败：$error')),
-                ),
-              ),
-              const Divider(height: 1),
-              SizedBox(
-                height: 180,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '今日日程',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Expanded(
-                        child: todaySchedules.when(
-                          data: (items) {
-                            if (items.isEmpty) {
-                              return const Center(child: Text('今天暂无日程'));
-                            }
-                            return ListView.separated(
-                              itemCount: items.length,
-                              separatorBuilder: (_, __) => const Divider(height: 8),
-                              itemBuilder: (context, index) {
-                                final item = items[index];
-                                final timeText = item.isAllDay
-                                    ? '全天'
-                                    : '${DateFormat('HH:mm').format(item.startTime)} - ${DateFormat('HH:mm').format(item.endTime)}';
-                                return InkWell(
-                                  borderRadius: BorderRadius.circular(10),
-                                  onTap: () => _openForm(
-                                    context,
-                                    ref,
-                                    schedule: item,
-                                    initialDate: today,
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: isDarkMode
-                                          ? surfaceColor
-                                          : Theme.of(context)
-                                              .colorScheme
-                                              .surfaceContainerHighest
-                                              .withValues(alpha: 0.5),
-                                      border: isDarkMode
-                                          ? Border.all(
-                                              color: onSurfaceColor.withValues(alpha: 0.12),
-                                            )
-                                          : null,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                item.title,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                '$timeText  ·  ${item.category}',
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: Theme.of(context).textTheme.bodySmall,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        IconButton(
-                                          visualDensity: VisualDensity.compact,
-                                          onPressed: () => _deleteSchedule(context, ref, item.id),
-                                          icon: const Icon(Icons.delete_outline),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
+          Positioned.fill(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Row(
+                      children: [
+                        ChoiceChip(
+                          label: const Text('月视图'),
+                          selected: calendarFormat == CalendarFormat.month,
+                          selectedColor: isDarkMode ? surfaceColor : null,
+                          backgroundColor: isDarkMode ? surfaceColor : null,
+                          side: isDarkMode
+                              ? BorderSide(
+                                  color: calendarFormat == CalendarFormat.month
+                                      ? onSurfaceColor
+                                      : onSurfaceColor.withValues(alpha: 0.35),
+                                )
+                              : null,
+                          labelStyle: isDarkMode
+                              ? TextStyle(color: onSurfaceColor)
+                              : null,
+                          onSelected: (_) {
+                            ref.read(calendarFormatProvider.notifier).state =
+                                CalendarFormat.month;
                           },
-                          loading: () => const Center(child: CircularProgressIndicator()),
-                          error: (error, _) => Text('今日日程加载失败：$error'),
+                        ),
+                        const SizedBox(width: 8),
+                        ChoiceChip(
+                          label: const Text('周视图'),
+                          selected: calendarFormat == CalendarFormat.week,
+                          selectedColor: isDarkMode ? surfaceColor : null,
+                          backgroundColor: isDarkMode ? surfaceColor : null,
+                          side: isDarkMode
+                              ? BorderSide(
+                                  color: calendarFormat == CalendarFormat.week
+                                      ? onSurfaceColor
+                                      : onSurfaceColor.withValues(alpha: 0.35),
+                                )
+                              : null,
+                          labelStyle: isDarkMode
+                              ? TextStyle(color: onSurfaceColor)
+                              : null,
+                          onSelected: (_) {
+                            ref.read(calendarFormatProvider.notifier).state =
+                                CalendarFormat.week;
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      color: isDarkMode
+                          ? surfaceColor
+                          : Theme.of(context).colorScheme.surface.withValues(alpha: 0.74),
+                    ),
+                    child: TableCalendar<ScheduleItem>(
+                      locale: 'zh_CN',
+                      startingDayOfWeek: StartingDayOfWeek.monday,
+                      firstDay: DateTime(2020, 1, 1),
+                      lastDay: DateTime(2100, 12, 31),
+                      focusedDay: focusedDay,
+                      calendarFormat: calendarFormat,
+                      selectedDayPredicate: (day) => isSameDay(day, selectedDay),
+                      eventLoader: (day) => monthMap[stripTime(day)] ?? const [],
+                      availableGestures: AvailableGestures.horizontalSwipe,
+                      headerStyle: const HeaderStyle(
+                        formatButtonVisible: false,
+                        titleCentered: true,
+                      ),
+                      calendarStyle: const CalendarStyle(
+                        markersMaxCount: 0,
+                        outsideDaysVisible: true,
+                      ),
+                      calendarBuilders: CalendarBuilders(
+                        defaultBuilder: (context, day, _) => _buildDayCell(
+                          context,
+                          day,
+                          hasEvent: (monthMap[stripTime(day)]?.isNotEmpty ?? false),
+                        ),
+                        outsideBuilder: (context, day, _) => _buildDayCell(
+                          context,
+                          day,
+                          isOutside: true,
+                          hasEvent: (monthMap[stripTime(day)]?.isNotEmpty ?? false),
+                        ),
+                        todayBuilder: (context, day, _) => _buildDayCell(
+                          context,
+                          day,
+                          isToday: true,
+                          hasEvent: (monthMap[stripTime(day)]?.isNotEmpty ?? false),
+                        ),
+                        selectedBuilder: (context, day, _) => _buildDayCell(
+                          context,
+                          day,
+                          isSelected: true,
+                          hasEvent: (monthMap[stripTime(day)]?.isNotEmpty ?? false),
                         ),
                       ),
-                    ],
+                      onDaySelected: (selected, focused) {
+                        ref.read(selectedDayProvider.notifier).state = stripTime(selected);
+                        ref.read(focusedDayProvider.notifier).state = focused;
+                      },
+                      onPageChanged: (focused) {
+                        ref.read(focusedDayProvider.notifier).state = focused;
+                      },
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            DateFormat('yyyy年MM月dd日 EEEE', 'zh_CN').format(selectedDay),
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        Text(
+                          '今日日程',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  daySchedules.when(
+                    data: (items) {
+                      if (items.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 32),
+                          child: EmptyScheduleView(),
+                        );
+                      }
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: items.length,
+                        itemBuilder: (context, index) {
+                          final item = items[index];
+                          return ScheduleListItem(
+                            item: item,
+                            backgroundImage: isDarkMode ? null : bgImage,
+                            onTap: () => _openForm(
+                              context,
+                              ref,
+                              schedule: item,
+                              initialDate: selectedDay,
+                            ),
+                            onDelete: () => _deleteSchedule(context, ref, item.id),
+                          );
+                        },
+                      );
+                    },
+                    loading: () => const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 32),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (error, stack) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Center(child: Text('加载失败：$error')),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ],
       ),
