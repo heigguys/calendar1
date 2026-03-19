@@ -32,6 +32,8 @@ class HomePage extends ConsumerWidget {
     final bgImage = bgBytes == null ? null : MemoryImage(bgBytes);
     final themeMode = ref.watch(themeModeProvider).valueOrNull ?? ThemeMode.light;
     final isDarkMode = themeMode == ThemeMode.dark;
+    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final onSurfaceColor = Theme.of(context).colorScheme.onSurface;
 
     return Scaffold(
       appBar: AppBar(
@@ -57,18 +59,22 @@ class HomePage extends ConsumerWidget {
       body: Stack(
         children: [
           Positioned.fill(
-            child: bgImage == null
-                ? const ColoredBox(color: Colors.white)
-                : Image(
-                    image: bgImage,
-                    fit: BoxFit.cover,
-                  ),
+            child: isDarkMode
+                ? ColoredBox(color: surfaceColor)
+                : bgImage == null
+                    ? const ColoredBox(color: Colors.white)
+                    : Image(
+                        image: bgImage,
+                        fit: BoxFit.cover,
+                      ),
           ),
           Positioned.fill(
             child: Container(
-              color: bgImage == null
+              color: isDarkMode
                   ? Colors.transparent
-                  : Theme.of(context).colorScheme.surface.withValues(alpha: 0.78),
+                  : bgImage == null
+                      ? Colors.transparent
+                      : Theme.of(context).colorScheme.surface.withValues(alpha: 0.78),
             ),
           ),
           Column(
@@ -80,6 +86,18 @@ class HomePage extends ConsumerWidget {
                     ChoiceChip(
                       label: const Text('月视图'),
                       selected: calendarFormat == CalendarFormat.month,
+                      selectedColor: isDarkMode ? surfaceColor : null,
+                      backgroundColor: isDarkMode ? surfaceColor : null,
+                      side: isDarkMode
+                          ? BorderSide(
+                              color: calendarFormat == CalendarFormat.month
+                                  ? onSurfaceColor
+                                  : onSurfaceColor.withValues(alpha: 0.35),
+                            )
+                          : null,
+                      labelStyle: isDarkMode
+                          ? TextStyle(color: onSurfaceColor)
+                          : null,
                       onSelected: (_) {
                         ref.read(calendarFormatProvider.notifier).state =
                             CalendarFormat.month;
@@ -89,6 +107,18 @@ class HomePage extends ConsumerWidget {
                     ChoiceChip(
                       label: const Text('周视图'),
                       selected: calendarFormat == CalendarFormat.week,
+                      selectedColor: isDarkMode ? surfaceColor : null,
+                      backgroundColor: isDarkMode ? surfaceColor : null,
+                      side: isDarkMode
+                          ? BorderSide(
+                              color: calendarFormat == CalendarFormat.week
+                                  ? onSurfaceColor
+                                  : onSurfaceColor.withValues(alpha: 0.35),
+                            )
+                          : null,
+                      labelStyle: isDarkMode
+                          ? TextStyle(color: onSurfaceColor)
+                          : null,
                       onSelected: (_) {
                         ref.read(calendarFormatProvider.notifier).state =
                             CalendarFormat.week;
@@ -101,7 +131,9 @@ class HomePage extends ConsumerWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 10),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
-                  color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.74),
+                  color: isDarkMode
+                      ? surfaceColor
+                      : Theme.of(context).colorScheme.surface.withValues(alpha: 0.74),
                 ),
                 child: TableCalendar<ScheduleItem>(
                   locale: 'zh_CN',
@@ -178,7 +210,7 @@ class HomePage extends ConsumerWidget {
                         final item = items[index];
                         return ScheduleListItem(
                           item: item,
-                          backgroundImage: bgImage,
+                          backgroundImage: isDarkMode ? null : bgImage,
                           onTap: () => _openForm(
                             context,
                             ref,
@@ -233,10 +265,17 @@ class HomePage extends ConsumerWidget {
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10),
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .surfaceContainerHighest
-                                          .withValues(alpha: 0.5),
+                                      color: isDarkMode
+                                          ? surfaceColor
+                                          : Theme.of(context)
+                                              .colorScheme
+                                              .surfaceContainerHighest
+                                              .withValues(alpha: 0.5),
+                                      border: isDarkMode
+                                          ? Border.all(
+                                              color: onSurfaceColor.withValues(alpha: 0.12),
+                                            )
+                                          : null,
                                     ),
                                     child: Row(
                                       children: [
@@ -294,31 +333,54 @@ class HomePage extends ConsumerWidget {
     bool isSelected = false,
     bool hasEvent = false,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDarkMode = theme.brightness == Brightness.dark;
     final lunar = Lunar.fromDate(day);
     final lunarText = '${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}';
 
     Color? bgColor;
-    Color textColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black;
-    Color lunarColor = Theme.of(context).textTheme.bodySmall?.color ?? Colors.black54;
+    Color textColor = theme.textTheme.bodyMedium?.color ?? Colors.black;
+    Color lunarColor = theme.textTheme.bodySmall?.color ?? Colors.black54;
+    Border? border;
 
-    if (isSelected) {
-      bgColor = colorScheme.primary;
-      textColor = colorScheme.onPrimary;
-      lunarColor = colorScheme.onPrimary.withValues(alpha: 0.9);
-    } else if (isToday) {
-      bgColor = colorScheme.primaryContainer;
-      textColor = colorScheme.onPrimaryContainer;
-      lunarColor = colorScheme.onPrimaryContainer.withValues(alpha: 0.9);
-    } else if (isOutside) {
-      textColor = Theme.of(context).disabledColor;
-      lunarColor = Theme.of(context).disabledColor.withValues(alpha: 0.85);
+    if (isDarkMode) {
+      bgColor = colorScheme.surface;
+      textColor = isOutside
+          ? colorScheme.onSurface.withValues(alpha: 0.5)
+          : colorScheme.onSurface;
+      lunarColor = isOutside
+          ? colorScheme.onSurface.withValues(alpha: 0.4)
+          : colorScheme.onSurface.withValues(alpha: 0.75);
+
+      if (isSelected) {
+        border = Border.all(color: colorScheme.onSurface, width: 1.3);
+      } else if (isToday) {
+        border = Border.all(
+          color: colorScheme.onSurface.withValues(alpha: 0.65),
+          width: 1.0,
+        );
+      }
+    } else {
+      if (isSelected) {
+        bgColor = colorScheme.primary;
+        textColor = colorScheme.onPrimary;
+        lunarColor = colorScheme.onPrimary.withValues(alpha: 0.9);
+      } else if (isToday) {
+        bgColor = colorScheme.primaryContainer;
+        textColor = colorScheme.onPrimaryContainer;
+        lunarColor = colorScheme.onPrimaryContainer.withValues(alpha: 0.9);
+      } else if (isOutside) {
+        textColor = theme.disabledColor;
+        lunarColor = theme.disabledColor.withValues(alpha: 0.85);
+      }
     }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
       decoration: BoxDecoration(
         color: bgColor,
+        border: border,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -340,7 +402,11 @@ class HomePage extends ConsumerWidget {
             width: 4,
             height: 4,
             decoration: BoxDecoration(
-              color: hasEvent ? (isSelected ? colorScheme.onPrimary : colorScheme.primary) : Colors.transparent,
+              color: hasEvent
+                  ? (isDarkMode
+                      ? colorScheme.onSurface
+                      : (isSelected ? colorScheme.onPrimary : colorScheme.primary))
+                  : Colors.transparent,
               shape: BoxShape.circle,
             ),
           ),

@@ -19,6 +19,9 @@ class ScheduleListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDarkMode = theme.brightness == Brightness.dark;
     final timeText = item.isAllDay
         ? '全天'
         : '${DateFormat('HH:mm').format(item.startTime)} - ${DateFormat('HH:mm').format(item.endTime)}';
@@ -27,18 +30,23 @@ class ScheduleListItem extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: isDarkMode
+            ? const []
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+        border: isDarkMode
+            ? Border.all(color: colorScheme.onSurface.withValues(alpha: 0.12))
+            : null,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: Material(
-          color: Theme.of(context).colorScheme.surfaceContainerHigh,
+          color: colorScheme.surface,
           child: Ink(
             decoration: BoxDecoration(
               image: backgroundImage == null
@@ -46,16 +54,19 @@ class ScheduleListItem extends StatelessWidget {
                   : DecorationImage(
                       image: backgroundImage!,
                       fit: BoxFit.cover,
-                      opacity: 0.22,
+                      opacity: isDarkMode ? 0.12 : 0.22,
                     ),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.90),
-                  Theme.of(context).colorScheme.surface.withValues(alpha: 0.78),
-                ],
-              ),
+              color: isDarkMode ? colorScheme.surface : null,
+              gradient: isDarkMode
+                  ? null
+                  : LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        colorScheme.surfaceContainerHighest.withValues(alpha: 0.90),
+                        colorScheme.surface.withValues(alpha: 0.78),
+                      ],
+                    ),
             ),
             child: ListTile(
               onTap: onTap,
@@ -80,13 +91,29 @@ class ScheduleListItem extends StatelessWidget {
                     children: [
                       Chip(
                         visualDensity: VisualDensity.compact,
+                        backgroundColor: isDarkMode ? colorScheme.surface : null,
+                        side: isDarkMode
+                            ? BorderSide(color: colorScheme.onSurface.withValues(alpha: 0.35))
+                            : null,
+                        labelStyle: isDarkMode ? TextStyle(color: colorScheme.onSurface) : null,
                         label: Text(item.category),
                       ),
                       if (item.reminderTime != null)
-                        const Chip(
+                        Chip(
                           visualDensity: VisualDensity.compact,
-                          avatar: Icon(Icons.notifications_active_outlined, size: 16),
-                          label: Text('已设置提醒'),
+                          backgroundColor: isDarkMode ? colorScheme.surface : null,
+                          side: isDarkMode
+                              ? BorderSide(color: colorScheme.onSurface.withValues(alpha: 0.35))
+                              : null,
+                          labelStyle: isDarkMode
+                              ? TextStyle(color: colorScheme.onSurface)
+                              : null,
+                          avatar: Icon(
+                            Icons.notifications_active_outlined,
+                            size: 16,
+                            color: isDarkMode ? colorScheme.onSurface : null,
+                          ),
+                          label: const Text('已设置提醒'),
                         ),
                     ],
                   ),
