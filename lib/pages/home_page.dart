@@ -337,9 +337,9 @@ class HomePage extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
     final isDarkMode = theme.brightness == Brightness.dark;
     final lunar = Lunar.fromDate(day);
-    final holidayName = _holidayNameForDay(day, lunar);
+    final holidayName = _holidayLabelForDay(day, lunar);
     final lunarText = holidayName ?? '${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}';
-    final isHoliday = holidayName != null;
+    final isHoliday = _isHolidayDay(day, lunar);
 
     Color? bgColor;
     Color textColor = theme.textTheme.bodyMedium?.color ?? Colors.black;
@@ -433,29 +433,63 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  String? _holidayNameForDay(DateTime day, Lunar lunar) {
+  String? _holidayLabelForDay(DateTime day, Lunar lunar) {
     if (day.month == 1 && day.day == 1) {
       return '元旦';
     }
-    if (_isGregorianRange(day, 4, 4, 4, 6)) {
+    if (day.month == 4 && day.day == 4) {
       return '清明节';
     }
-    if (_isGregorianRange(day, 5, 1, 5, 5)) {
+    if (day.month == 5 && day.day == 1) {
       return '劳动节';
     }
-    if (_isGregorianRange(day, 6, 20, 6, 22)) {
+    if (day.month == 6 && day.day == 20) {
       return '端午节';
     }
-    if (_isGregorianRange(day, 9, 27, 9, 29)) {
+    if (day.month == 9 && day.day == 27) {
       return '中秋节';
     }
-    if (_isGregorianRange(day, 10, 1, 10, 7)) {
+    if (day.month == 10 && day.day == 1) {
       return '国庆节';
     }
 
     final lunarMonth = lunar.getMonthInChinese();
     final lunarDay = lunar.getDayInChinese();
 
+    if (lunarMonth == '正' && lunarDay == '初一') {
+      return '春节';
+    }
+    if (lunarMonth == '五' && lunarDay == '初五') {
+      return '端午节';
+    }
+    if (lunarMonth == '八' && lunarDay == '十五') {
+      return '中秋节';
+    }
+    return null;
+  }
+
+  bool _isHolidayDay(DateTime day, Lunar lunar) {
+    if (day.month == 1 && day.day == 1) {
+      return true;
+    }
+    if (_isGregorianRange(day, 4, 4, 4, 6)) {
+      return true;
+    }
+    if (_isGregorianRange(day, 5, 1, 5, 5)) {
+      return true;
+    }
+    if (_isGregorianRange(day, 6, 20, 6, 22)) {
+      return true;
+    }
+    if (_isGregorianRange(day, 9, 27, 9, 29)) {
+      return true;
+    }
+    if (_isGregorianRange(day, 10, 1, 10, 7)) {
+      return true;
+    }
+
+    final lunarMonth = lunar.getMonthInChinese();
+    final lunarDay = lunar.getDayInChinese();
     if (lunarMonth == '正') {
       const springFestivalDays = <String>{
         '初一',
@@ -467,16 +501,16 @@ class HomePage extends ConsumerWidget {
         '初七',
       };
       if (springFestivalDays.contains(lunarDay)) {
-        return '春节';
+        return true;
       }
     }
     if (lunarMonth == '五' && lunarDay == '初五') {
-      return '端午节';
+      return true;
     }
     if (lunarMonth == '八' && lunarDay == '十五') {
-      return '中秋节';
+      return true;
     }
-    return null;
+    return false;
   }
 
   bool _isGregorianRange(
