@@ -339,7 +339,7 @@ class HomePage extends ConsumerWidget {
     final isDarkMode = theme.brightness == Brightness.dark;
     final lunar = Lunar.fromDate(day);
     final holidayName = _holidayLabelForDay(day, lunar);
-    final lunarText = holidayName ?? '${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}';
+    final lunarText = holidayName ?? _compactLunarText(lunar);
     final isHoliday = _isHolidayDay(day, lunar);
     final isWeekend = day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
 
@@ -387,6 +387,10 @@ class HomePage extends ConsumerWidget {
           : weekendGreen;
     }
 
+    final outsideOpacity = isOutside && !isSelected
+        ? (isDarkMode ? 0.48 : 0.42)
+        : 1.0;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
       decoration: BoxDecoration(
@@ -394,50 +398,53 @@ class HomePage extends ConsumerWidget {
         border: border,
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 40,
-            height: 20,
-            child: Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.center,
-              children: [
-                Text(
-                  '${day.day}',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textColor),
-                ),
-                if (isHoliday)
-                  const Positioned(
-                    top: -2,
-                    right: -6,
-                    child: _HolidayRestBadge(),
+      child: Opacity(
+        opacity: outsideOpacity,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 40,
+              height: 20,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Text(
+                    '${day.day}',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textColor),
                   ),
-              ],
+                  if (isHoliday)
+                    const Positioned(
+                      top: -2,
+                      right: -6,
+                      child: _HolidayRestBadge(),
+                    ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 1),
-          Text(
-            lunarText,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 9, color: lunarColor),
-          ),
-          const SizedBox(height: 2),
-          Container(
-            width: 4,
-            height: 4,
-            decoration: BoxDecoration(
-              color: hasEvent
-                  ? (isDarkMode
-                      ? colorScheme.onSurface
-                      : (isSelected ? colorScheme.onPrimary : colorScheme.primary))
-                  : Colors.transparent,
-              shape: BoxShape.circle,
+            const SizedBox(height: 1),
+            Text(
+              lunarText,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 9, color: lunarColor),
             ),
-          ),
-        ],
+            const SizedBox(height: 2),
+            Container(
+              width: 4,
+              height: 4,
+              decoration: BoxDecoration(
+                color: hasEvent
+                    ? (isDarkMode
+                        ? colorScheme.onSurface
+                        : (isSelected ? colorScheme.onPrimary : colorScheme.primary))
+                    : Colors.transparent,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -475,6 +482,15 @@ class HomePage extends ConsumerWidget {
       return '中秋节';
     }
     return null;
+  }
+
+  String _compactLunarText(Lunar lunar) {
+    final lunarMonth = lunar.getMonthInChinese();
+    final lunarDay = lunar.getDayInChinese();
+    if (lunarDay == '初一') {
+      return '$lunarMonth月';
+    }
+    return lunarDay;
   }
 
   bool _isHolidayDay(DateTime day, Lunar lunar) {
