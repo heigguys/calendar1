@@ -20,18 +20,23 @@ class ScheduleFormPage extends ConsumerStatefulWidget {
 }
 
 class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
+  static const List<String> _presetCategories = ['工作', '生活', '学习'];
+  static const String _customCategoryToken = '自定义';
+
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _noteController = TextEditingController();
-  final _categoryController = TextEditingController();
+  final _customCategoryController = TextEditingController();
 
   late DateTime _startTime;
   late DateTime _endTime;
   bool _isAllDay = false;
   DateTime? _reminderTime;
   bool _saving = false;
+  String _categoryMode = _presetCategories.first;
 
   bool get _isEditing => widget.schedule != null;
+  bool get _isCustomCategory => _categoryMode == _customCategoryToken;
 
   @override
   void initState() {
@@ -40,11 +45,17 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
     if (schedule != null) {
       _titleController.text = schedule.title;
       _noteController.text = schedule.note;
-      _categoryController.text = schedule.category;
       _startTime = schedule.startTime;
       _endTime = schedule.endTime;
       _isAllDay = schedule.isAllDay;
       _reminderTime = schedule.reminderTime;
+
+      if (_presetCategories.contains(schedule.category)) {
+        _categoryMode = schedule.category;
+      } else {
+        _categoryMode = _customCategoryToken;
+        _customCategoryController.text = schedule.category;
+      }
       return;
     }
 
@@ -56,14 +67,14 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
       0,
     );
     _endTime = _startTime.add(const Duration(hours: 1));
-    _categoryController.text = '默认';
+    _categoryMode = _presetCategories.first;
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _noteController.dispose();
-    _categoryController.dispose();
+    _customCategoryController.dispose();
     super.dispose();
   }
 
@@ -110,20 +121,44 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
               maxLines: 4,
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: _categoryController,
+            DropdownButtonFormField<String>(
+              value: _categoryMode,
               decoration: const InputDecoration(
                 labelText: '分类',
-                hintText: '例如：工作 / 学习 / 生活',
                 border: OutlineInputBorder(),
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return '请输入分类';
+              items: const [
+                DropdownMenuItem(value: '工作', child: Text('工作')),
+                DropdownMenuItem(value: '生活', child: Text('生活')),
+                DropdownMenuItem(value: '学习', child: Text('学习')),
+                DropdownMenuItem(value: '自定义', child: Text('自定义')),
+              ],
+              onChanged: (value) {
+                if (value == null) {
+                  return;
                 }
-                return null;
+                setState(() {
+                  _categoryMode = value;
+                });
               },
             ),
+            if (_isCustomCategory) ...[
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _customCategoryController,
+                decoration: const InputDecoration(
+                  labelText: '自定义分类名称',
+                  hintText: '例如：运动 / 旅行 / 家庭',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (_isCustomCategory && (value == null || value.trim().isEmpty)) {
+                    return '请输入自定义分类名称';
+                  }
+                  return null;
+                },
+              ),
+            ],
             const SizedBox(height: 12),
             SwitchListTile(
               value: _isAllDay,
@@ -283,6 +318,14 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
       return;
     }
 
+    final resolvedCategory = _isCustomCategory
+        ? _customCategoryController.text.trim()
+        : _categoryMode;
+    if (resolvedCategory.isEmpty) {
+      _showSnackBar('请先设置分类');
+      return;
+    }
+
     setState(() => _saving = true);
 
     try {
@@ -290,7 +333,7 @@ class _ScheduleFormPageState extends ConsumerState<ScheduleFormPage> {
       final item = widget.schedule ?? ScheduleItem();
       item.title = _titleController.text.trim();
       item.note = _noteController.text.trim();
-      item.category = _categoryController.text.trim();
+      item.category = resolvedCategory;
       item.isAllDay = _isAllDay;
       item.startTime =
           _isAllDay ? DateTime(_startTime.year, _startTime.month, _startTime.day) : _startTime;
