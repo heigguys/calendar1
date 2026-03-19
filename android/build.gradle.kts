@@ -48,9 +48,41 @@ fun Project.ensureAndroidNamespace() {
     setNamespace.invoke(androidExt, manifestPackage ?: fallbackNamespace)
 }
 
+fun Project.forceAndroidCompileSdk(compileSdk: Int) {
+    val androidExt = extensions.findByName("android") ?: return
+    val methods = androidExt.javaClass.methods
+
+    fun invokeIfFound(name: String, arg: Any): Boolean {
+        val method = methods.firstOrNull {
+            if (it.name != name || it.parameterCount != 1) {
+                return@firstOrNull false
+            }
+            val parameterType = it.parameterTypes.firstOrNull() ?: return@firstOrNull false
+            when (arg) {
+                is Int ->
+                    parameterType == Int::class.javaPrimitiveType ||
+                        parameterType == Int::class.javaObjectType
+                is String -> parameterType == String::class.java
+                else -> false
+            }
+        } ?: return false
+        method.invoke(androidExt, arg)
+        return true
+    }
+
+    if (invokeIfFound("setCompileSdk", compileSdk)) return
+    if (invokeIfFound("setCompileSdkVersion", compileSdk)) return
+    if (invokeIfFound("compileSdkVersion", compileSdk)) return
+
+    val sdkText = compileSdk.toString()
+    if (invokeIfFound("setCompileSdkVersion", sdkText)) return
+    invokeIfFound("compileSdkVersion", sdkText)
+}
+
 subprojects {
     afterEvaluate {
         ensureAndroidNamespace()
+        forceAndroidCompileSdk(36)
     }
 }
 
@@ -60,4 +92,16 @@ subprojects {
 
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
+}
+
+
+// 另一种尝试：如果上面的 beforeEvaluate 还是报错，请换成这个
+allprojects {
+    configurations.all {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "androidx.core" && requested.name == "core-ktx") {
+                // 强制某些导致 lStar 问题的核心库版本对齐
+            }
+        }
+    }
 }

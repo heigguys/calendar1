@@ -6,7 +6,8 @@
 
 android {
     namespace = "com.example.calendar"
-    compileSdk = flutter.compileSdkVersion
+    // compileSdk = flutter.compileSdkVersion
+    compileSdk = 36  // 必须是 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -24,7 +25,10 @@ android {
     defaultConfig {
         applicationId = "com.example.calendar"
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        
+        // targetSdk = flutter.targetSdkVersion
+        targetSdk = 36 // 建议同步
+
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
