@@ -25,6 +25,7 @@ class HomePage extends ConsumerWidget {
     final monthMap = ref.watch(
       monthEventMapProvider(DateTime(focusedDay.year, focusedDay.month)),
     );
+    final relativeDayText = _relativeDayText(selectedDay);
 
     final bgBytes = ref.watch(backgroundImageBytesProvider);
     final bgImage = bgBytes == null ? null : MemoryImage(bgBytes);
@@ -35,7 +36,19 @@ class HomePage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('本地日历'),
+        title: const Text(
+          'calendar',
+          style: TextStyle(
+            fontSize: 31,
+            fontWeight: FontWeight.w900,
+            fontStyle: FontStyle.italic,
+            letterSpacing: 1.2,
+            shadows: [
+              Shadow(offset: Offset(1.1, 1.1), blurRadius: 0, color: Color(0xFF9AA0A6)),
+              Shadow(offset: Offset(2.0, 2.0), blurRadius: 0, color: Color(0x665B6169)),
+            ],
+          ),
+        ),
         actions: [
           IconButton(
             icon: Icon(isDarkMode ? Icons.light_mode_outlined : Icons.nightlight_round),
@@ -125,6 +138,31 @@ class HomePage extends ConsumerWidget {
                                 CalendarFormat.week;
                           },
                         ),
+                        const Spacer(),
+                        SizedBox(
+                          width: 72,
+                          height: 24,
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              minimumSize: const Size(72, 24),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                              side: BorderSide(
+                                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.7),
+                              ),
+                            ),
+                            onPressed: () {
+                              final today = stripTime(DateTime.now());
+                              ref.read(selectedDayProvider.notifier).state = today;
+                              ref.read(focusedDayProvider.notifier).state = today;
+                            },
+                            child: const Text(
+                              '回到今天',
+                              style: TextStyle(fontSize: 11.5, height: 1.0),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -136,63 +174,70 @@ class HomePage extends ConsumerWidget {
                           ? surfaceColor
                           : Theme.of(context).colorScheme.surface.withValues(alpha: 0.74),
                     ),
-                    child: TableCalendar<ScheduleItem>(
-                      locale: 'zh_CN',
-                      startingDayOfWeek: StartingDayOfWeek.monday,
-                      daysOfWeekHeight: 22,
-                      firstDay: DateTime(2020, 1, 1),
-                      lastDay: DateTime(2100, 12, 31),
-                      focusedDay: focusedDay,
-                      calendarFormat: calendarFormat,
-                      selectedDayPredicate: (day) => isSameDay(day, selectedDay),
-                      eventLoader: (day) => monthMap[stripTime(day)] ?? const [],
-                      availableGestures: AvailableGestures.horizontalSwipe,
-                      headerStyle: const HeaderStyle(
-                        formatButtonVisible: false,
-                        titleCentered: true,
-                        headerPadding: EdgeInsets.only(top: 4, bottom: 2),
-                        headerMargin: EdgeInsets.only(bottom: 2),
-                      ),
-                      daysOfWeekStyle: const DaysOfWeekStyle(
-                        weekdayStyle: TextStyle(height: 1.1),
-                        weekendStyle: TextStyle(height: 1.1),
-                      ),
-                      calendarStyle: const CalendarStyle(
-                        markersMaxCount: 0,
-                        outsideDaysVisible: true,
-                      ),
-                      calendarBuilders: CalendarBuilders(
-                        defaultBuilder: (context, day, _) => _buildDayCell(
-                          context,
-                          day,
-                          hasEvent: (monthMap[stripTime(day)]?.isNotEmpty ?? false),
+                    child: ScrollConfiguration(
+                      behavior: const _CalendarSwipeScrollBehavior(),
+                      child: TableCalendar<ScheduleItem>(
+                        locale: 'zh_CN',
+                        startingDayOfWeek: StartingDayOfWeek.monday,
+                        daysOfWeekHeight: 22,
+                        firstDay: DateTime(2020, 1, 1),
+                        lastDay: DateTime(2100, 12, 31),
+                        focusedDay: focusedDay,
+                        calendarFormat: calendarFormat,
+                        selectedDayPredicate: (day) => isSameDay(day, selectedDay),
+                        eventLoader: (day) => monthMap[stripTime(day)] ?? const [],
+                        availableGestures: AvailableGestures.horizontalSwipe,
+                        headerStyle: const HeaderStyle(
+                          formatButtonVisible: false,
+                          titleCentered: true,
+                          headerPadding: EdgeInsets.only(top: 4, bottom: 2),
+                          headerMargin: EdgeInsets.only(bottom: 2),
                         ),
-                        outsideBuilder: (context, day, _) => _buildDayCell(
-                          context,
-                          day,
-                          isOutside: true,
-                          hasEvent: (monthMap[stripTime(day)]?.isNotEmpty ?? false),
+                        daysOfWeekStyle: const DaysOfWeekStyle(
+                          weekdayStyle: TextStyle(height: 1.1),
+                          weekendStyle: TextStyle(height: 1.1),
                         ),
-                        todayBuilder: (context, day, _) => _buildDayCell(
-                          context,
-                          day,
-                          isToday: true,
-                          hasEvent: (monthMap[stripTime(day)]?.isNotEmpty ?? false),
+                        calendarStyle: const CalendarStyle(
+                          markersMaxCount: 0,
+                          outsideDaysVisible: true,
                         ),
-                        selectedBuilder: (context, day, _) => _buildDayCell(
-                          context,
-                          day,
-                          isSelected: true,
-                          hasEvent: (monthMap[stripTime(day)]?.isNotEmpty ?? false),
+                        calendarBuilders: CalendarBuilders(
+                          defaultBuilder: (context, day, _) => _buildDayCell(
+                            context,
+                            day,
+                            hasEvent: (monthMap[stripTime(day)]?.isNotEmpty ?? false),
+                          ),
+                          outsideBuilder: (context, day, _) => _buildDayCell(
+                            context,
+                            day,
+                            isOutside: true,
+                            hasEvent: (monthMap[stripTime(day)]?.isNotEmpty ?? false),
+                          ),
+                          todayBuilder: (context, day, _) => _buildDayCell(
+                            context,
+                            day,
+                            isToday: true,
+                            hasEvent: (monthMap[stripTime(day)]?.isNotEmpty ?? false),
+                          ),
+                          selectedBuilder: (context, day, _) => _buildDayCell(
+                            context,
+                            day,
+                            isSelected: true,
+                            hasEvent: (monthMap[stripTime(day)]?.isNotEmpty ?? false),
+                          ),
                         ),
+                        onDaySelected: (selected, focused) {
+                          ref.read(selectedDayProvider.notifier).state = stripTime(selected);
+                          ref.read(focusedDayProvider.notifier).state = focused;
+                        },
+                        onPageChanged: (focused) {
+                          ref.read(focusedDayProvider.notifier).state = focused;
+                          if (calendarFormat == CalendarFormat.month) {
+                            ref.read(selectedDayProvider.notifier).state =
+                                DateTime(focused.year, focused.month, 1);
+                          }
+                        },
                       ),
-                      onDaySelected: (selected, focused) {
-                        ref.read(selectedDayProvider.notifier).state = stripTime(selected);
-                        ref.read(focusedDayProvider.notifier).state = focused;
-                      },
-                      onPageChanged: (focused) {
-                        ref.read(focusedDayProvider.notifier).state = focused;
-                      },
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -207,7 +252,7 @@ class HomePage extends ConsumerWidget {
                           ),
                         ),
                         Text(
-                          '今日日程',
+                          relativeDayText,
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ],
@@ -472,6 +517,18 @@ class HomePage extends ConsumerWidget {
     return false;
   }
 
+  String _relativeDayText(DateTime selectedDay) {
+    final today = stripTime(DateTime.now());
+    final diff = stripTime(selectedDay).difference(today).inDays;
+    if (diff == 0) {
+      return '今天';
+    }
+    if (diff > 0) {
+      return '$diff天后';
+    }
+    return '${diff.abs()}天前';
+  }
+
   bool _isGregorianRange(
     DateTime day,
     int startMonth,
@@ -604,6 +661,33 @@ class HomePage extends ConsumerWidget {
       );
     }
   }
+}
+
+class _CalendarSwipeScrollBehavior extends MaterialScrollBehavior {
+  const _CalendarSwipeScrollBehavior();
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const _CalendarPageSwipePhysics(parent: ClampingScrollPhysics());
+  }
+}
+
+class _CalendarPageSwipePhysics extends ScrollPhysics {
+  const _CalendarPageSwipePhysics({super.parent});
+
+  @override
+  _CalendarPageSwipePhysics applyTo(ScrollPhysics? ancestor) {
+    return _CalendarPageSwipePhysics(parent: buildParent(ancestor));
+  }
+
+  @override
+  double? get dragStartDistanceMotionThreshold => 0.8;
+
+  @override
+  double get minFlingDistance => 6.0;
+
+  @override
+  double get minFlingVelocity => 30.0;
 }
 
 class _HolidayRestBadge extends StatelessWidget {
