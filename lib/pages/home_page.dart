@@ -137,6 +137,7 @@ class HomePage extends ConsumerWidget {
                 ),
                 child: TableCalendar<ScheduleItem>(
                   locale: 'zh_CN',
+                  startingDayOfWeek: StartingDayOfWeek.monday,
                   firstDay: DateTime(2020, 1, 1),
                   lastDay: DateTime(2100, 12, 31),
                   focusedDay: focusedDay,
