@@ -139,6 +139,7 @@ class HomePage extends ConsumerWidget {
                     child: TableCalendar<ScheduleItem>(
                       locale: 'zh_CN',
                       startingDayOfWeek: StartingDayOfWeek.monday,
+                      daysOfWeekHeight: 22,
                       firstDay: DateTime(2020, 1, 1),
                       lastDay: DateTime(2100, 12, 31),
                       focusedDay: focusedDay,
@@ -149,6 +150,12 @@ class HomePage extends ConsumerWidget {
                       headerStyle: const HeaderStyle(
                         formatButtonVisible: false,
                         titleCentered: true,
+                        headerPadding: EdgeInsets.only(top: 4, bottom: 2),
+                        headerMargin: EdgeInsets.only(bottom: 2),
+                      ),
+                      daysOfWeekStyle: const DaysOfWeekStyle(
+                        weekdayStyle: TextStyle(height: 1.1),
+                        weekendStyle: TextStyle(height: 1.1),
                       ),
                       calendarStyle: const CalendarStyle(
                         markersMaxCount: 0,
