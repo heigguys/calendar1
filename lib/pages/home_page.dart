@@ -337,7 +337,9 @@ class HomePage extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
     final isDarkMode = theme.brightness == Brightness.dark;
     final lunar = Lunar.fromDate(day);
-    final lunarText = _buildLunarOrHolidayText(day, lunar);
+    final holidayName = _holidayNameForDay(day, lunar);
+    final lunarText = holidayName ?? '${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}';
+    final isHoliday = holidayName != null;
 
     Color? bgColor;
     Color textColor = theme.textTheme.bodyMedium?.color ?? Colors.black;
@@ -386,9 +388,25 @@ class HomePage extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            '${day.day}',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textColor),
+          SizedBox(
+            width: 40,
+            height: 20,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Text(
+                  '${day.day}',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textColor),
+                ),
+                if (isHoliday)
+                  const Positioned(
+                    top: -2,
+                    right: -6,
+                    child: _HolidayRestBadge(),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(height: 1),
           Text(
@@ -413,14 +431,6 @@ class HomePage extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  String _buildLunarOrHolidayText(DateTime day, Lunar lunar) {
-    final holidayName = _holidayNameForDay(day, lunar);
-    if (holidayName != null) {
-      return holidayName;
-    }
-    return '${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}';
   }
 
   String? _holidayNameForDay(DateTime day, Lunar lunar) {
@@ -600,5 +610,31 @@ class HomePage extends ConsumerWidget {
         const SnackBar(content: Text('日程已删除')),
       );
     }
+  }
+}
+
+class _HolidayRestBadge extends StatelessWidget {
+  const _HolidayRestBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 16,
+      height: 16,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        color: Color(0xFF2FB54A),
+        shape: BoxShape.circle,
+      ),
+      child: const Text(
+        '休',
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+          height: 1.0,
+        ),
+      ),
+    );
   }
 }
