@@ -33,7 +33,10 @@ class NotificationService {
     final android = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
     await android?.requestNotificationsPermission();
-    await android?.requestExactAlarmsPermission();
+    final canScheduleExact = await android?.canScheduleExactNotifications();
+    if (canScheduleExact == false) {
+      await android?.requestExactAlarmsPermission();
+    }
   }
 
   Future<void> _configureTimezone() async {
@@ -64,6 +67,12 @@ class NotificationService {
 
     final notificationId = _notificationId(item.id);
     final tzReminderTime = tz.TZDateTime.from(reminderTime, tz.local);
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    final canScheduleExact = await android?.canScheduleExactNotifications();
+    final scheduleMode = canScheduleExact == true
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexactAllowWhileIdle;
 
     await _plugin.zonedSchedule(
       notificationId,
@@ -80,7 +89,7 @@ class NotificationService {
         ),
         iOS: DarwinNotificationDetails(),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: scheduleMode,
       payload: item.id.toString(),
     );
   }
