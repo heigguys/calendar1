@@ -112,46 +112,62 @@ class HomePage extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     child: Row(
                       children: [
-                        ChoiceChip(
-                          label: const Text('月视图'),
-                          selected: calendarFormat == CalendarFormat.month,
-                          selectedColor: isDarkMode ? surfaceColor : null,
-                          backgroundColor: isDarkMode ? surfaceColor : null,
-                          side: isDarkMode
-                              ? BorderSide(
-                                  color: calendarFormat == CalendarFormat.month
-                                      ? onSurfaceColor
-                                      : onSurfaceColor.withValues(alpha: 0.35),
-                                )
-                              : null,
-                          labelStyle: isDarkMode
-                              ? TextStyle(color: onSurfaceColor)
-                              : null,
-                          onSelected: (_) {
-                            ref.read(calendarFormatProvider.notifier).state =
-                                CalendarFormat.month;
-                          },
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: 0.75,
+                          child: Transform.scale(
+                            scale: 0.75,
+                            alignment: Alignment.centerLeft,
+                            child: ChoiceChip(
+                              label: const Text('月视图'),
+                              selected: calendarFormat == CalendarFormat.month,
+                              selectedColor: isDarkMode ? surfaceColor : null,
+                              backgroundColor: isDarkMode ? surfaceColor : null,
+                              side: isDarkMode
+                                  ? BorderSide(
+                                      color: calendarFormat == CalendarFormat.month
+                                          ? onSurfaceColor
+                                          : onSurfaceColor.withValues(alpha: 0.35),
+                                    )
+                                  : null,
+                              labelStyle: isDarkMode
+                                  ? TextStyle(color: onSurfaceColor)
+                                  : null,
+                              onSelected: (_) {
+                                ref.read(calendarFormatProvider.notifier).state =
+                                    CalendarFormat.month;
+                              },
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 8),
-                        ChoiceChip(
-                          label: const Text('周视图'),
-                          selected: calendarFormat == CalendarFormat.week,
-                          selectedColor: isDarkMode ? surfaceColor : null,
-                          backgroundColor: isDarkMode ? surfaceColor : null,
-                          side: isDarkMode
-                              ? BorderSide(
-                                  color: calendarFormat == CalendarFormat.week
-                                      ? onSurfaceColor
-                                      : onSurfaceColor.withValues(alpha: 0.35),
-                                )
-                              : null,
-                          labelStyle: isDarkMode
-                              ? TextStyle(color: onSurfaceColor)
-                              : null,
-                          onSelected: (_) {
-                            ref.read(calendarFormatProvider.notifier).state =
-                                CalendarFormat.week;
-                          },
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: 0.75,
+                          child: Transform.scale(
+                            scale: 0.75,
+                            alignment: Alignment.centerLeft,
+                            child: ChoiceChip(
+                              label: const Text('周视图'),
+                              selected: calendarFormat == CalendarFormat.week,
+                              selectedColor: isDarkMode ? surfaceColor : null,
+                              backgroundColor: isDarkMode ? surfaceColor : null,
+                              side: isDarkMode
+                                  ? BorderSide(
+                                      color: calendarFormat == CalendarFormat.week
+                                          ? onSurfaceColor
+                                          : onSurfaceColor.withValues(alpha: 0.35),
+                                    )
+                                  : null,
+                              labelStyle: isDarkMode
+                                  ? TextStyle(color: onSurfaceColor)
+                                  : null,
+                              onSelected: (_) {
+                                ref.read(calendarFormatProvider.notifier).state =
+                                    CalendarFormat.week;
+                              },
+                            ),
+                          ),
                         ),
                         const Spacer(),
                         SizedBox(
