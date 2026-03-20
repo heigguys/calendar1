@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:lunar/calendar/Holiday.dart';
 import 'package:lunar/calendar/Lunar.dart';
+import 'package:lunar/calendar/util/HolidayUtil.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../models/schedule_item.dart';
@@ -429,20 +431,21 @@ class HomePage extends ConsumerWidget {
   }
 
   String? _holidayLabelForDay(DateTime day, Lunar lunar) {
+    final holiday = _holidayForDay(day);
+    if (holiday != null &&
+        !holiday.isWork() &&
+        holiday.getTarget() == _formatYmd(day)) {
+      return holiday.getName();
+    }
+
     if (day.month == 1 && day.day == 1) {
       return '元旦';
     }
-    if (day.month == 4 && day.day == 4) {
+    if (lunar.getJieQi() == '清明') {
       return '清明节';
     }
     if (day.month == 5 && day.day == 1) {
       return '劳动节';
-    }
-    if (day.month == 6 && day.day == 20) {
-      return '端午节';
-    }
-    if (day.month == 9 && day.day == 27) {
-      return '中秋节';
     }
     if (day.month == 10 && day.day == 1) {
       return '国庆节';
@@ -473,22 +476,8 @@ class HomePage extends ConsumerWidget {
   }
 
   bool _isHolidayDay(DateTime day, Lunar lunar) {
-    if (day.month == 1 && day.day == 1) {
-      return true;
-    }
-    if (_isGregorianRange(day, 4, 4, 4, 6)) {
-      return true;
-    }
-    if (_isGregorianRange(day, 5, 1, 5, 5)) {
-      return true;
-    }
-    if (_isGregorianRange(day, 6, 20, 6, 22)) {
-      return true;
-    }
-    if (_isGregorianRange(day, 9, 27, 9, 29)) {
-      return true;
-    }
-    if (_isGregorianRange(day, 10, 1, 10, 7)) {
+    final holiday = _holidayForDay(day);
+    if (holiday != null && !holiday.isWork()) {
       return true;
     }
 
@@ -514,6 +503,9 @@ class HomePage extends ConsumerWidget {
     if (lunarMonth == '八' && lunarDay == '十五') {
       return true;
     }
+    if (lunar.getJieQi() == '清明') {
+      return true;
+    }
     return false;
   }
 
@@ -529,17 +521,15 @@ class HomePage extends ConsumerWidget {
     return '${diff.abs()}天前';
   }
 
-  bool _isGregorianRange(
-    DateTime day,
-    int startMonth,
-    int startDay,
-    int endMonth,
-    int endDay,
-  ) {
-    final normalized = DateTime(day.year, day.month, day.day);
-    final start = DateTime(day.year, startMonth, startDay);
-    final end = DateTime(day.year, endMonth, endDay);
-    return !normalized.isBefore(start) && !normalized.isAfter(end);
+  Holiday? _holidayForDay(DateTime day) {
+    return HolidayUtil.getHolidayByYmd(day.year, day.month, day.day);
+  }
+
+  String _formatYmd(DateTime day) {
+    final y = day.year.toString().padLeft(4, '0');
+    final m = day.month.toString().padLeft(2, '0');
+    final d = day.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
   }
 
   Future<void> _openBackgroundActions(BuildContext context, WidgetRef ref) async {
