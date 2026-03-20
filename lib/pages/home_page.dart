@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:lunar/calendar/Holiday.dart';
 import 'package:lunar/calendar/Lunar.dart';
+import 'package:lunar/calendar/Solar.dart';
 import 'package:lunar/calendar/util/HolidayUtil.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -17,6 +18,18 @@ import 'schedule_form_page.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
+
+  static const Set<String> _westernFestivals = <String>{
+    '情人节',
+    '愚人节',
+    '母亲节',
+    '父亲节',
+    '万圣节前夜',
+    '万圣节',
+    '平安夜',
+    '圣诞节',
+    '感恩节',
+  };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -235,8 +248,13 @@ class HomePage extends ConsumerWidget {
                         onPageChanged: (focused) {
                           ref.read(focusedDayProvider.notifier).state = focused;
                           if (calendarFormat == CalendarFormat.month) {
-                            ref.read(selectedDayProvider.notifier).state =
-                                DateTime(focused.year, focused.month, 1);
+                            final currentSelected = ref.read(selectedDayProvider);
+                            final inSameMonth = currentSelected.year == focused.year &&
+                                currentSelected.month == focused.month;
+                            if (!inSameMonth) {
+                              ref.read(selectedDayProvider.notifier).state =
+                                  DateTime(focused.year, focused.month, 1);
+                            }
                           }
                         },
                       ),
@@ -438,6 +456,11 @@ class HomePage extends ConsumerWidget {
       return holiday.getName();
     }
 
+    final western = _westernHolidayForDay(day);
+    if (western != null) {
+      return western;
+    }
+
     if (day.month == 1 && day.day == 1) {
       return '元旦';
     }
@@ -523,6 +546,16 @@ class HomePage extends ConsumerWidget {
 
   Holiday? _holidayForDay(DateTime day) {
     return HolidayUtil.getHolidayByYmd(day.year, day.month, day.day);
+  }
+
+  String? _westernHolidayForDay(DateTime day) {
+    final festivals = Solar.fromDate(day).getFestivals();
+    for (final name in festivals) {
+      if (_westernFestivals.contains(name)) {
+        return name;
+      }
+    }
+    return null;
   }
 
   String _formatYmd(DateTime day) {
