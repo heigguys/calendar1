@@ -172,9 +172,13 @@ class HomePage extends ConsumerWidget {
                               ref.read(selectedDayProvider.notifier).state = today;
                               ref.read(focusedDayProvider.notifier).state = today;
                             },
-                            child: const Text(
+                            child: Text(
                               '回到今天',
-                              style: TextStyle(fontSize: 11.5, height: 1.0),
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                height: 1.0,
+                                color: isDarkMode ? Colors.white : null,
+                              ),
                             ),
                           ),
                         ),
